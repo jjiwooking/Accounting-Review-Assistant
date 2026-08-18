@@ -64,7 +64,7 @@ def _validate_rule_value(rule_type: str, field_name: str, operator: str, compare
         try:
             float(compare_value)
         except ValueError:
-            raise HTTPException(400, "금액 비교 Rule의 기준값은 숫자여야 합니다.")
+            raise HTTPException(400, "금액 비교 검토 기준의 기준값은 숫자여야 합니다.")
     if rule_type == "FIELD" and operator == "text_min_length":
         try:
             value = int(float(compare_value))
@@ -82,12 +82,12 @@ def _validate_checklist_config(item_type: str, rule_codes: str, severity_filter:
     if item_type == "AUTO_RULES":
         codes = [x.strip() for x in rule_codes.split(",") if x.strip()]
         if not codes:
-            raise HTTPException(400, "AUTO_RULES는 하나 이상의 Rule 코드를 지정해야 합니다.")
+            raise HTTPException(400, "자동 기준 연동은 하나 이상의 검토 코드를 지정해야 합니다.")
         with db() as conn:
             known = {r[0] for r in conn.execute("SELECT code FROM review_rules")}
         missing = [c for c in codes if c not in known]
         if missing:
-            raise HTTPException(400, f"존재하지 않는 Rule 코드가 있습니다: {', '.join(missing)}")
+            raise HTTPException(400, f"존재하지 않는 검토 코드가 있습니다: {', '.join(missing)}")
 
 
 @app.get("/health")
@@ -392,11 +392,11 @@ def settings_rule_update(
     with db() as conn:
         existing = conn.execute("SELECT rule_type,field_name,operator FROM review_rules WHERE code=?", (code,)).fetchone()
         if not existing:
-            raise HTTPException(404, "Rule을 찾을 수 없습니다.")
+            raise HTTPException(404, "검토 기준을 찾을 수 없습니다.")
         _validate_rule_value(existing["rule_type"], existing["field_name"] or "", existing["operator"] or "", compare_value.strip())
         conn.execute("""UPDATE review_rules SET name=?,enabled=?,severity=?,category=?,compare_value=?,message=?,sort_order=? WHERE code=?""",
                      (name.strip(), 1 if enabled == "1" else 0, severity, category.strip(), compare_value.strip(), message.strip(), sort_order, code))
-        conn.execute("INSERT INTO audit_log(action,target_type,target_id,detail,created_at) VALUES(?,?,?,?,datetime('now','localtime'))", ("검토 Rule 변경", "rule", code, f"{name} / {severity} / 활성={enabled}"))
+        conn.execute("INSERT INTO audit_log(action,target_type,target_id,detail,created_at) VALUES(?,?,?,?,datetime('now','localtime'))", ("검토 기준 변경", "rule", code, f"{name} / {severity} / 활성={enabled}"))
     validate_all()
     return RedirectResponse(url="/settings?saved=1#rules", status_code=303)
 
@@ -404,7 +404,7 @@ def settings_rule_update(
 @app.post("/settings/rule-add")
 def settings_rule_add(
     name: str = Form(...), field_name: str = Form(...), operator: str = Form(...), compare_value: str = Form(""),
-    severity: str = Form("확인"), category: str = Form("사용자 Rule"), message: str = Form(...),
+    severity: str = Form("확인"), category: str = Form("사용자 기준"), message: str = Form(...),
 ):
     allowed_fields = {"expense_date","amount","supply_amount","tax_amount","vendor","purpose","account_name","department","employee","evidence_no","evidence_status","payment_method","note"}
     allowed_ops = {"missing","not_missing","eq","neq","gt","gte","lt","lte","contains","not_contains","text_min_length"}
@@ -417,7 +417,7 @@ def settings_rule_add(
         conn.execute("""INSERT INTO review_rules(code,name,enabled,rule_type,field_name,operator,compare_value,severity,category,message,sort_order,is_system)
                         VALUES(?,?,1,'FIELD',?,?,?,?,?,?,?,0)""",
                      (code, name.strip(), field_name, operator, compare_value.strip(), severity, category.strip(), message.strip(), order))
-        conn.execute("INSERT INTO audit_log(action,target_type,target_id,detail,created_at) VALUES(?,?,?,?,datetime('now','localtime'))", ("사용자 Rule 추가", "rule", code, name.strip()))
+        conn.execute("INSERT INTO audit_log(action,target_type,target_id,detail,created_at) VALUES(?,?,?,?,datetime('now','localtime'))", ("사용자 기준 추가", "rule", code, name.strip()))
     validate_all()
     return RedirectResponse(url="/settings?saved=1#rules", status_code=303)
 
@@ -427,15 +427,15 @@ def settings_rule_delete(code: str):
     with db() as conn:
         row = conn.execute("SELECT is_system,name FROM review_rules WHERE code=?", (code,)).fetchone()
         if not row:
-            raise HTTPException(404, "Rule을 찾을 수 없습니다.")
+            raise HTTPException(404, "검토 기준을 찾을 수 없습니다.")
         if row["is_system"]:
-            raise HTTPException(400, "기본 Rule은 삭제 대신 비활성화하세요.")
+            raise HTTPException(400, "기본 검토 기준은 삭제 대신 사용 안 함으로 설정하세요.")
         refs = [dict(r) for r in conn.execute("SELECT id,label,rule_codes FROM checklist_items WHERE item_type='AUTO_RULES'")]
         used_by = [r["label"] for r in refs if code in [x.strip() for x in (r.get("rule_codes") or "").split(",") if x.strip()]]
         if used_by:
-            raise HTTPException(400, f"체크리스트에서 사용 중인 Rule입니다. 먼저 체크리스트 연결을 해제하세요: {', '.join(used_by)}")
+            raise HTTPException(400, f"체크리스트에서 사용 중인 검토 기준입니다. 먼저 체크리스트 연결을 해제하세요: {', '.join(used_by)}")
         conn.execute("DELETE FROM review_rules WHERE code=?", (code,))
-        conn.execute("INSERT INTO audit_log(action,target_type,target_id,detail,created_at) VALUES(?,?,?,?,datetime('now','localtime'))", ("사용자 Rule 삭제", "rule", code, row["name"]))
+        conn.execute("INSERT INTO audit_log(action,target_type,target_id,detail,created_at) VALUES(?,?,?,?,datetime('now','localtime'))", ("사용자 기준 삭제", "rule", code, row["name"]))
     validate_all()
     return RedirectResponse(url="/settings?saved=1#rules", status_code=303)
 

@@ -104,8 +104,8 @@ def create_review_workbook(month: str | None = None) -> Path:
         ws.append([t["id"], t["source_file"], t["source_row"], t["transaction_id"], t["expense_date"], t["amount"], t["supply_amount"], t["tax_amount"], t["vendor"], t["purpose"], t["account_name"], t["department"], t["employee"], t["evidence_no"], t["evidence_status"], t["payment_method"], t["review_status"], t["reviewer_note"]])
     _style_sheet(ws)
 
-    ws = wb.create_sheet("검토이슈")
-    headers = ["이슈ID", "거래ID", "등급", "분류", "규칙", "메시지", "처리상태", "담당자", "처리기한", "처리메모", "원본파일", "원본행", "지출일자", "금액", "거래처", "사용목적", "증빙번호"]
+    ws = wb.create_sheet("검토항목")
+    headers = ["검토항목ID", "거래ID", "등급", "분류", "검토기준", "메시지", "처리상태", "담당자", "처리기한", "처리메모", "원본파일", "원본행", "지출일자", "금액", "거래처", "사용목적", "증빙번호"]
     ws.append(headers)
     for i in issues:
         ws.append([i["id"], i["transaction_id"], i["severity"], i["category"], i["rule_code"], i["message"], i["status"], i.get("assignee"), i.get("due_date"), i["resolution_note"], i["source_file"], i["source_row"], i["expense_date"], i["amount"], i["vendor"], i["purpose"], i["evidence_no"]])
@@ -124,7 +124,7 @@ def create_review_workbook(month: str | None = None) -> Path:
         ws.append([item["label"], "완료" if item["ok"] else "확인필요"])
     ws.append([])
     ws.append(["전체 자료건수", ck["total"]])
-    ws.append(["미완료 이슈", ck["unresolved"]])
+    ws.append(["미처리 검토 항목", ck["unresolved"]])
     ws.append(["제출 준비 상태", "준비됨" if ck["ready"] else "추가 검토 필요"])
     _style_sheet(ws)
 
@@ -134,7 +134,7 @@ def create_review_workbook(month: str | None = None) -> Path:
     ws.append(["대상월", report["month"]])
     ws.append(["자료건수", report["count"]])
     ws.append(["합계금액", report["amount"]])
-    ws.append(["미완료 이슈", report["issue_count"]])
+    ws.append(["미처리 검토 항목", report["issue_count"]])
     ws.append(["오류 등급", report.get("error_count", 0)])
     ws.append(["증빙 누락", report.get("evidence_count", 0)])
     ws.append(["중복 의심", report.get("duplicate_count", 0)])
@@ -149,8 +149,8 @@ def create_review_workbook(month: str | None = None) -> Path:
         ws.append(["거래처", x["name"], x["previous"], x["current"], x["delta"]])
     _style_sheet(ws)
 
-    ws = wb.create_sheet("검토Rule설정")
-    ws.append(["코드", "이름", "사용", "유형", "필드", "조건", "기준값", "등급", "분류", "메시지", "순서", "기본Rule"])
+    ws = wb.create_sheet("검토기준설정")
+    ws.append(["코드", "이름", "사용", "유형", "필드", "조건", "기준값", "등급", "분류", "메시지", "순서", "기본기준"])
     for r in get_rules(include_disabled=True):
         ws.append([r["code"], r["name"], "사용" if r["enabled"] else "미사용", r["rule_type"], r.get("field_name"), r.get("operator"), r.get("compare_value"), r["severity"], r["category"], r["message"], r["sort_order"], "기본" if r["is_system"] else "사용자"])
     _style_sheet(ws)

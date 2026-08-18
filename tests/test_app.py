@@ -164,7 +164,7 @@ def test_audit_log_written():
     with db() as conn:
         actions = [r[0] for r in conn.execute('SELECT action FROM audit_log')]
     assert '자료 업로드' in actions
-    assert '검토 규칙 실행' in actions
+    assert '검토 기준 실행' in actions
 
 def test_monthly_report_compares_previous_month():
     rows = [
@@ -214,7 +214,7 @@ def test_v02_menu_order_visibility_and_label():
     res = client.get('/')
     assert '맞춤 월간보고' in res.text
     # hidden from nav, but the route itself remains accessible for safe recovery/admin use
-    assert '>AI 보고 보조</a>' not in res.text
+    assert '>보고서 작성 보조</a>' not in res.text
     assert client.get('/ai-assist').status_code == 200
 
 
@@ -257,7 +257,7 @@ def test_v02_issue_workflow_assignee_due_date_and_audit():
     with db() as conn:
         row = conn.execute("SELECT status,assignee,due_date,resolution_note FROM issues WHERE id=?", (issue['id'],)).fetchone()
         assert row['status'] == '보완요청' and row['assignee'] == '김회계' and row['due_date'] == '2026-08-20'
-        assert conn.execute("SELECT COUNT(*) FROM audit_log WHERE action='이슈 처리'").fetchone()[0] >= 1
+        assert conn.execute("SELECT COUNT(*) FROM audit_log WHERE action='검토 항목 처리'").fetchone()[0] >= 1
     resolve_issue(issue['id'], '확인완료', '증빙 수령', '김회계', '2026-08-20')
     with db() as conn:
         assert conn.execute("SELECT status FROM issues WHERE id=?", (issue['id'],)).fetchone()['status'] == '확인완료'
@@ -295,7 +295,7 @@ def test_v02_monthly_report_has_observed_change_drivers():
 def test_v02_settings_page_contains_codeless_management_sections():
     res = client.get('/settings')
     assert res.status_code == 200
-    for text in ['화면 문구 관리','검토 Rule 관리','제출 체크리스트 관리','메뉴 이름·순서·표시 여부']:
+    for text in ['화면 문구 관리','검토 기준 관리','제출 체크리스트 관리','메뉴 이름·순서·표시 여부']:
         assert text in res.text
 
 

@@ -47,21 +47,21 @@ DEFAULT_SETTINGS = {
 
 DEFAULT_MENUS = [
     ("dashboard", "/", "검토 현황", 1, 10),
-    ("upload", "/upload", "자료 업로드", 1, 20),
+    ("upload", "/upload", "자료 등록", 1, 20),
     ("transactions", "/transactions", "회계자료 검토", 1, 30),
     ("issues", "/issues", "확인·보완 업무", 1, 35),
-    ("documents", "/documents", "증빙·문서 관리", 1, 40),
-    ("checklist", "/checklist", "제출 전 체크리스트", 1, 50),
+    ("documents", "/documents", "증빙자료 관리", 1, 40),
+    ("checklist", "/checklist", "제출 전 점검", 1, 50),
     ("reports", "/reports", "월별 보고", 1, 60),
-    ("ai", "/ai-assist", "AI 보고 보조", 1, 70),
+    ("ai", "/ai-assist", "보고서 작성 보조", 1, 70),
     ("settings", "/settings", "관리자 설정", 1, 80),
 ]
 
 DEFAULT_UI_TEXTS = {
     # 공통/사이드바
-    "brand_subtitle": "Accounting Review Assistant",
-    "sidebar_mode_title": "로컬 안전 모드",
-    "sidebar_mode_desc": "계산·검증은 규칙 기반으로 수행하며, 외부 AI로 자료를 자동 전송하지 않습니다.",
+    "brand_subtitle": "회계 검토·보고 업무 지원",
+    "sidebar_mode_title": "검토 방식",
+    "sidebar_mode_desc": "계산과 점검은 프로그램의 검토 기준에 따라 수행하며, 자료를 외부 AI 서비스로 자동 전송하지 않습니다.",
     # 대시보드
     "dashboard_description": "업로드된 회계자료의 품질, 검토 필요 항목, 증빙 누락과 처리대상을 한눈에 확인합니다.",
     "dashboard_upload_button": "+ 회계자료 업로드",
@@ -73,14 +73,14 @@ DEFAULT_UI_TEXTS = {
     "metric_evidence": "증빙 누락",
     "metric_evidence_sub": "증빙번호·문서 연결 기준",
     "metric_duplicate": "중복 의심",
-    "metric_duplicate_sub": "활성 중복 Rule 기준",
+    "metric_duplicate_sub": "현재 중복 검토 기준",
     "metric_unassigned": "담당자 미지정",
     "metric_overdue": "처리기한 경과",
-    "dashboard_quality_title": "데이터 품질",
-    "dashboard_issue_title": "미완료 이슈 구성",
+    "dashboard_quality_title": "자료 점검 현황",
+    "dashboard_issue_title": "미처리 검토 항목 현황",
     "dashboard_recent_tx_title": "최근 회계자료",
     "dashboard_recent_import_title": "최근 업로드",
-    "dashboard_empty_issues": "미완료 이슈가 없습니다.",
+    "dashboard_empty_issues": "미처리 검토 항목이 없습니다.",
     "dashboard_empty_tx": "아직 업로드된 자료가 없습니다.",
     "dashboard_empty_import": "업로드 이력이 없습니다.",
     "dashboard_footer": "검토결과는 회계·세무·감사인의 전문적 판단을 대체하지 않습니다. 프로그램은 누락·중복·형식 오류와 확인 필요 항목을 좁히는 보조 도구입니다.",
@@ -95,7 +95,7 @@ DEFAULT_UI_TEXTS = {
     "upload_process_title": "정확성을 위해 2단계로 업로드합니다",
     "upload_process_1": "파일을 읽어 열 이름을 자동 인식합니다.",
     "upload_process_2": "지출일자·금액·사용목적 등 실제 연결 열을 사용자가 직접 확인합니다.",
-    "upload_process_3": "확정 후 데이터베이스에 저장하고 활성 검토 Rule을 실행합니다.",
+    "upload_process_3": "확정 후 데이터베이스에 저장하고 사용 중인 검토 기준을 적용합니다.",
     # 거래 검토
     "transactions_description": "원본 파일과 행번호를 보존한 상태로 검토 결과와 처리상태를 확인합니다.",
     "transactions_upload_button": "+ 자료 업로드",
@@ -109,7 +109,7 @@ DEFAULT_UI_TEXTS = {
     "detail_back_button": "목록으로",
     "detail_data_title": "회계자료",
     "detail_documents_title": "연결된 증빙문서",
-    "detail_issues_title": "자동 검토 결과",
+    "detail_issues_title": "검토 결과",
     "detail_request_summary": "확인 요청 문구",
     "detail_save_button": "처리 저장",
     # 확인 요청 문구 템플릿
@@ -122,7 +122,7 @@ DEFAULT_UI_TEXTS = {
     "confirm_default": "{date} {vendor} {amount} 지출 건에 확인사항이 있습니다: {message}. 확인 후 회신 부탁드립니다.",
     # 체크리스트
     "checklist_description": "제출 전에 사람이 최종 확인해야 할 항목을 자동·수동 체크리스트로 관리합니다.",
-    "checklist_validate_button": "검토 규칙 다시 실행",
+    "checklist_validate_button": "검토 기준 다시 적용",
     "checklist_audit_button": "감사대응 패키지",
     "checklist_ready_title": "제출 준비 상태:",
     "checklist_ready_text": "핵심 체크리스트가 완료되었습니다. 최종 승인자는 원본 증빙과 예외처리 근거를 확인하세요.",
@@ -154,12 +154,12 @@ DEFAULT_UI_TEXTS = {
     "mapping_confirm_button": "2. 매핑 확정 및 검토 실행",
     "mapping_preview_title": "원본 미리보기",
     # AI
-    "ai_description": "검증된 집계값만 사용해 외부 생성형 AI에 전달할 보고 보조 프롬프트를 만듭니다.",
+    "ai_description": "검증된 집계값을 바탕으로 월별 보고서 작성에 활용할 AI 프롬프트를 만듭니다.",
     "ai_privacy_notice": "프로그램이 외부 AI 서비스로 자료를 자동 전송하지 않습니다. 집계된 사실만 포함한 프롬프트를 사용자가 직접 확인해 활용합니다.",
-    "ai_prompt_title": "AI 월간보고 보조 프롬프트",
-    "ai_footer": "AI가 만든 문장은 반드시 사람이 원자료·증빙·검토이슈와 대조한 뒤 사용하세요. AI에게 숫자 계산, 회계처리 확정, 규정 위반 판정을 맡기지 않습니다.",
+    "ai_prompt_title": "월별 보고서 작성용 AI 프롬프트",
+    "ai_footer": "AI가 작성한 문장은 반드시 원자료·증빙·검토 결과와 대조한 뒤 사용하세요. 숫자 계산, 회계처리 확정, 규정 위반 판정은 AI에 맡기지 않습니다.",
     # 설정
-    "settings_description": "코드 수정 없이 화면 문구, 메뉴, 검토 Rule, 체크리스트와 운영기준을 변경합니다.",
+    "settings_description": "관리자 화면에서 메뉴, 안내문구, 검토 기준, 체크리스트와 운영 기준을 변경합니다.",
     "settings_backup_button": "전체 데이터 백업",
 }
 
@@ -167,26 +167,26 @@ DEFAULT_UI_TEXTS = {
 # Streamlit portfolio view texts are also code-less. Existing v0.2 databases
 # receive these automatically on the next init_db() run.
 DEFAULT_UI_TEXTS.update({
-    "st_dashboard_kicker": "01 / REVIEW OVERVIEW",
-    "st_dashboard_title": "숫자보다 먼저, 근거를 봅니다.",
-    "st_upload_kicker": "02 / DATA INTAKE",
-    "st_upload_title": "자료를 먼저 깨끗하게.",
-    "st_transactions_kicker": "03 / TRANSACTION REVIEW",
-    "st_transactions_title": "원본 행까지 추적하는 검토.",
-    "st_issues_kicker": "04 / ACTION QUEUE",
-    "st_issues_title": "발견한 문제를 실제 업무로.",
-    "st_documents_kicker": "05 / EVIDENCE",
-    "st_documents_title": "증빙을 거래와 연결하기.",
-    "st_checklist_kicker": "06 / PRE-SUBMISSION",
-    "st_checklist_title": "제출 전 마지막 확인.",
-    "st_reports_kicker": "07 / MONTHLY REPORT",
-    "st_reports_title": "무엇이 변했는지부터.",
-    "st_ai_kicker": "08 / AI ASSIST",
-    "st_ai_title": "AI는 계산기가 아니라 문장 보조자.",
-    "st_settings_kicker": "09 / NO-CODE ADMIN",
-    "st_settings_title": "코드 없이 운영 기준을 바꾸기.",
-    "st_help_kicker": "HOW TO USE",
-    "st_help_title": "5분이면 흐름을 볼 수 있습니다.",
+    "st_dashboard_kicker": "01 · 검토 현황",
+    "st_dashboard_title": "회계자료 검토 현황",
+    "st_upload_kicker": "02 · 자료 등록",
+    "st_upload_title": "회계자료 등록 및 항목 확인",
+    "st_transactions_kicker": "03 · 거래 검토",
+    "st_transactions_title": "회계자료 검토",
+    "st_issues_kicker": "04 · 확인·보완",
+    "st_issues_title": "확인·보완 업무 관리",
+    "st_documents_kicker": "05 · 증빙 관리",
+    "st_documents_title": "증빙자료 관리",
+    "st_checklist_kicker": "06 · 제출 전 점검",
+    "st_checklist_title": "제출 전 점검",
+    "st_reports_kicker": "07 · 월별 보고",
+    "st_reports_title": "월별 증감 현황 및 주요 변동",
+    "st_ai_kicker": "08 · 보고서 작성",
+    "st_ai_title": "월별 보고서 작성 보조",
+    "st_settings_kicker": "09 · 관리자 설정",
+    "st_settings_title": "관리자 설정",
+    "st_help_kicker": "사용 안내",
+    "st_help_title": "처음 사용하는 방법",
 })
 
 DEFAULT_RULES = [
@@ -215,7 +215,7 @@ DEFAULT_CHECKLIST = [
     ("중복·분할결제 의심 건 확인", "AUTO_RULES", "DUPLICATE_EXACT,DUPLICATE_PROBABLE", "", 1, 30),
     ("금액·부가세 불일치 확인", "AUTO_RULES", "VAT_MISMATCH", "", 1, 40),
     ("고액 지출의 승인·근거 확인", "AUTO_RULES", "AMOUNT_HIGH", "", 1, 50),
-    ("모든 오류 등급 이슈 처리", "AUTO_SEVERITY", "", "오류", 1, 60),
+    ("모든 오류 등급 검토 항목 처리", "AUTO_SEVERITY", "", "오류", 1, 60),
     ("최종 승인자가 원본 증빙과 예외처리 근거를 확인", "MANUAL", "", "", 1, 70),
 ]
 
@@ -391,6 +391,61 @@ def init_db() -> None:
             group = key.split("_", 1)[0]
             conn.execute("INSERT OR IGNORE INTO ui_texts(key,value,group_name,sort_order) VALUES(?,?,?,?)", (key, value, group, order))
 
+        # v0.3.1 practical-Korean UI migration. Update only untouched v0.3 stock text,
+        # so administrator-customized labels and copy remain unchanged.
+        legacy_ui_texts = {
+            "brand_subtitle": "Accounting Review Assistant",
+            "sidebar_mode_title": "로컬 안전 모드",
+            "sidebar_mode_desc": "계산·검증은 규칙 기반으로 수행하며, 외부 AI로 자료를 자동 전송하지 않습니다.",
+            "metric_duplicate_sub": "활성 중복 Rule 기준",
+            "dashboard_quality_title": "데이터 품질",
+            "dashboard_issue_title": "미완료 이슈 구성",
+            "dashboard_empty_issues": "미완료 이슈가 없습니다.",
+            "upload_process_3": "확정 후 데이터베이스에 저장하고 활성 검토 Rule을 실행합니다.",
+            "checklist_validate_button": "검토 규칙 다시 실행",
+            "ai_description": "검증된 집계값만 사용해 외부 생성형 AI에 전달할 보고 보조 프롬프트를 만듭니다.",
+            "ai_prompt_title": "AI 월간보고 보조 프롬프트",
+            "ai_footer": "AI가 만든 문장은 반드시 사람이 원자료·증빙·검토이슈와 대조한 뒤 사용하세요. AI에게 숫자 계산, 회계처리 확정, 규정 위반 판정을 맡기지 않습니다.",
+            "settings_description": "코드 수정 없이 화면 문구, 메뉴, 검토 Rule, 체크리스트와 운영기준을 변경합니다.",
+            "st_dashboard_kicker": "01 / REVIEW OVERVIEW",
+            "st_dashboard_title": "숫자보다 먼저, 근거를 봅니다.",
+            "st_upload_kicker": "02 / DATA INTAKE",
+            "st_upload_title": "자료를 먼저 깨끗하게.",
+            "st_transactions_kicker": "03 / TRANSACTION REVIEW",
+            "st_transactions_title": "원본 행까지 추적하는 검토.",
+            "st_issues_kicker": "04 / ACTION QUEUE",
+            "st_issues_title": "발견한 문제를 실제 업무로.",
+            "st_documents_kicker": "05 / EVIDENCE",
+            "st_documents_title": "증빙을 거래와 연결하기.",
+            "st_checklist_kicker": "06 / PRE-SUBMISSION",
+            "st_checklist_title": "제출 전 마지막 확인.",
+            "st_reports_kicker": "07 / MONTHLY REPORT",
+            "st_reports_title": "무엇이 변했는지부터.",
+            "st_ai_kicker": "08 / AI ASSIST",
+            "st_ai_title": "AI는 계산기가 아니라 문장 보조자.",
+            "st_settings_kicker": "09 / NO-CODE ADMIN",
+            "st_settings_title": "코드 없이 운영 기준을 바꾸기.",
+            "st_help_kicker": "HOW TO USE",
+            "st_help_title": "5분이면 흐름을 볼 수 있습니다.",
+        }
+        for key, old_value in legacy_ui_texts.items():
+            new_value = DEFAULT_UI_TEXTS.get(key)
+            if new_value is not None:
+                conn.execute("UPDATE ui_texts SET value=? WHERE key=? AND value=?", (new_value, key, old_value))
+
+        legacy_menu_labels = {
+            "upload": "자료 업로드",
+            "documents": "증빙·문서 관리",
+            "checklist": "제출 전 체크리스트",
+            "ai": "AI 보고 보조",
+        }
+        default_menu_labels = {row[0]: row[2] for row in DEFAULT_MENUS}
+        for menu_key, old_label in legacy_menu_labels.items():
+            conn.execute(
+                "UPDATE menus SET label=? WHERE menu_key=? AND label=?",
+                (default_menu_labels[menu_key], menu_key, old_label),
+            )
+
         # Seed rules, preserving v0.1 thresholds if present
         migrated_rules = []
         for row in DEFAULT_RULES:
@@ -414,6 +469,11 @@ def init_db() -> None:
             conn.executemany(
                 "INSERT INTO checklist_items(label,item_type,rule_codes,severity_filter,enabled,sort_order) VALUES(?,?,?,?,?,?)",
                 DEFAULT_CHECKLIST,
+            )
+        else:
+            conn.execute(
+                "UPDATE checklist_items SET label=? WHERE label=?",
+                ("모든 오류 등급 검토 항목 처리", "모든 오류 등급 이슈 처리"),
             )
 
 

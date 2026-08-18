@@ -362,7 +362,7 @@ def validate_all() -> dict[str, int]:
             conn.execute("UPDATE transactions SET review_status=? WHERE id=?", (status, tx["id"]))
         conn.execute(
             "INSERT INTO audit_log(action, target_type, detail, created_at) VALUES(?,?,?,?)",
-            ("검토 규칙 실행", "validation", f"{len(rows)}건 / 이슈 {created}건 / 활성 Rule {len(rules)}개", timestamp),
+            ("검토 기준 실행", "validation", f"{len(rows)}건 / 검토 항목 {created}건 / 사용 기준 {len(rules)}개", timestamp),
         )
     return {"transactions": len(rows), "issues": created, "rules": len(rules)}
 
@@ -448,7 +448,7 @@ def resolve_issue(issue_id: int, status: str, note: str = "", assignee: str = ""
     with db() as conn:
         issue = conn.execute("SELECT transaction_id, status, assignee, due_date FROM issues WHERE id=?", (issue_id,)).fetchone()
         if not issue:
-            raise ValueError("이슈를 찾을 수 없습니다.")
+            raise ValueError("검토 항목을 찾을 수 없습니다.")
         resolved_at = now_iso() if status in {"확인완료", "예외인정"} else None
         assignee_v = assignee.strip() or None
         due_v = due_date.strip() or None
@@ -464,7 +464,7 @@ def resolve_issue(issue_id: int, status: str, note: str = "", assignee: str = ""
         detail = f"{issue['status']}→{status} / 담당:{assignee_v or '-'} / 기한:{due_v or '-'} / {note}"
         conn.execute(
             "INSERT INTO audit_log(action,target_type,target_id,detail,created_at) VALUES(?,?,?,?,?)",
-            ("이슈 처리", "issue", str(issue_id), detail[:500], now_iso()),
+            ("검토 항목 처리", "issue", str(issue_id), detail[:500], now_iso()),
         )
 
 def update_transaction(tx_id: int, reviewer_note: str, review_status: str | None = None) -> None:
@@ -649,7 +649,7 @@ def monthly_report(month: str | None = None) -> dict[str, Any]:
         compare_text = (f" 전월({prev_month}) 대비 금액은 {amount_change_pct:+.1f}% 변동했습니다." if amount_change_pct is not None else " 비교 가능한 전월 금액 데이터는 없습니다.")
         draft = (
             f"{month} 회계자료는 총 {len(txs):,}건, 합계 {amount:,.0f}원입니다."
-            f"{compare_text} 현재 미확인 검토사항은 {issue_count:,}건이며, 이 중 오류 등급은 {error_count:,}건입니다. "
+            f"{compare_text} 현재 미처리 검토 항목은 {issue_count:,}건이며, 이 중 오류 등급은 {error_count:,}건입니다. "
             f"증빙 누락 확인 건은 {evidence_count:,}건, 중복·분할결제 의심 건은 {duplicate_count:,}건입니다. "
             f"{driver_text} {ready_text}"
         )
@@ -665,13 +665,13 @@ def data_quality_score() -> dict[str, Any]:
     summary = dashboard_summary()
     total = summary["total"]
     if total == 0:
-        return {"score": 0, "label": "데이터 없음", "note": "자료를 업로드하면 데이터 품질을 계산합니다."}
+        return {"score": 0, "label": "자료 없음", "note": "자료를 등록하면 점검 현황을 계산합니다."}
     with db() as conn:
         critical_tx = conn.execute("SELECT COUNT(DISTINCT transaction_id) FROM issues WHERE severity='오류' AND status NOT IN ('확인완료','예외인정')").fetchone()[0]
         warning_tx = conn.execute("SELECT COUNT(DISTINCT transaction_id) FROM issues WHERE severity='주의' AND status NOT IN ('확인완료','예외인정')").fetchone()[0]
     score = max(0, round(100 - (critical_tx / total * 70) - (warning_tx / total * 20)))
     label = "양호" if score >= 90 else "검토 필요" if score >= 70 else "주의"
-    note = "이 점수는 제출 적정성의 법적 판단이 아니라, 프로그램 검토규칙 기준의 데이터 품질 지표입니다."
+    note = "이 점수는 제출 적정성을 판단하는 법적 기준이 아니라, 프로그램의 검토 기준에 따른 내부 점검 지표입니다."
     return {"score": score, "label": label, "note": note}
 
 
@@ -687,7 +687,7 @@ def ai_assist_prompt(month: str | None = None) -> dict[str, str]:
 [절대 규칙]
 1. 아래 숫자를 변경하거나 새 숫자를 계산·추정하지 마세요.
 2. 없는 원인·사실·규정 위반을 만들어내지 마세요.
-3. '오류', '증빙누락', '중복의심'은 프로그램 검토규칙에 따른 확인 대상이며 부정·위법을 의미하지 않습니다.
+3. '오류', '증빙누락', '중복의심'은 프로그램의 검토 기준에 따른 확인 대상이며 부정·위법을 의미하지 않습니다.
 4. 회계·세무 판단이 추가로 필요한 부분은 '담당자 확인 필요'라고 명시하세요.
 5. 한국 기업의 내부 월간 회계보고 문체로, 간결하게 작성하세요.
 
@@ -695,7 +695,7 @@ def ai_assist_prompt(month: str | None = None) -> dict[str, str]:
 - 대상월: {report['month']}
 - 회계자료: {report['count']:,}건
 - 합계금액: {report['amount']:,.0f}원
-- 미확인 검토사항: {report['issue_count']:,}건
+- 미처리 검토 항목: {report['issue_count']:,}건
 - 오류 등급: {report.get('error_count',0):,}건
 - 증빙 누락 확인: {report.get('evidence_count',0):,}건
 - 중복·분할결제 의심: {report.get('duplicate_count',0):,}건

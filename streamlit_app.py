@@ -126,7 +126,7 @@ def metric_cards(summary: dict) -> None:
         ("전체 거래", f"{summary['total']:,}", f"총 {won(summary['total_amount'])}", ""),
         ("검토 필요", f"{summary['review_required']:,}", f"정상 {summary['normal_count']:,}건", "blue"),
         ("증빙 누락", f"{summary['missing_evidence']:,}", "증빙번호·문서 연결 기준", "alert"),
-        ("중복 의심", f"{summary['duplicates']:,}", "활성 중복 Rule 기준", ""),
+        ("중복 의심", f"{summary['duplicates']:,}", "현재 중복 검토 기준", ""),
         ("기한 경과", f"{summary['overdue']:,}", f"담당자 미지정 {summary['unassigned']:,}", "dark"),
     ]
     html = ['<div class="ds-grid">']
@@ -179,14 +179,14 @@ ensure_demo_seed()
 # --- Sidebar -----------------------------------------------------------------
 settings = get_settings()
 with st.sidebar:
-    st.markdown("### ◼ LEDGER CHECK")
-    st.caption("Accounting Review Portfolio")
+    st.markdown("### ◼ 회계 검토·보고")
+    st.caption("회계자료 검토 및 보고 보조")
     st.markdown("---")
     menus = [m for m in get_menus() if m['menu_key'] != 'settings']
     nav_options = [m['label'] for m in menus] + [menu_label('settings', '관리자 설정'), "사용 방법"]
     current = st.radio("메뉴", nav_options, label_visibility="collapsed")
     st.markdown("---")
-    st.markdown("**PUBLIC DEMO**")
+    st.markdown("**포트폴리오 데모**")
     st.caption("Streamlit Community Cloud의 로컬 DB는 영구 저장이 보장되지 않습니다. 실제 운영용은 외부 DB 연결이 필요합니다.")
     if st.button("데모 데이터 초기화", use_container_width=True):
         reset_demo()
@@ -199,22 +199,22 @@ texts = get_ui_texts()
 
 # --- Dashboard ---------------------------------------------------------------
 if page == 'dashboard':
-    hero(texts.get("st_dashboard_kicker","01 / REVIEW OVERVIEW"), texts.get("st_dashboard_title", settings.get('program_name', '회계자료 검토 및 보고 보조')), texts.get("dashboard_description","업로드된 회계자료의 품질과 처리대상을 한눈에 확인합니다."))
+    hero(texts.get("st_dashboard_kicker","01 · 검토 현황"), texts.get("st_dashboard_title", settings.get('program_name', '회계자료 검토 및 보고 보조 프로그램')), texts.get("dashboard_description","업로드된 회계자료의 품질과 처리대상을 한눈에 확인합니다."))
     summary = dashboard_summary(); quality = data_quality_score()
     metric_cards(summary)
     c1, c2 = st.columns([1.15, 1])
     with c1:
-        section("지금 처리해야 할 것", "미완료 이슈 우선순위")
+        section("우선 확인 업무", "미처리 검토 항목")
         rows = issue_rows(True)[:10]
         if rows:
             df = pd.DataFrame(rows)[['severity','category','vendor','amount','message','assignee','due_date','status']]
             df['amount'] = df['amount'].map(lambda x: f"{float(x or 0):,.0f}")
             st.dataframe(df, use_container_width=True, hide_index=True)
         else:
-            st.markdown('<div class="ds-note ds-success">미완료 검토 이슈가 없습니다.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="ds-note ds-success">미처리 검토 항목이 없습니다.</div>', unsafe_allow_html=True)
     with c2:
-        section("데이터 품질", "규칙 기반 내부 지표")
-        st.metric("품질 점수", f"{quality['score']} / 100", quality['label'])
+        section("자료 점검 현황", "자동 검토 결과")
+        st.metric("자료 점검 점수", f"{quality['score']} / 100", quality['label'])
         st.caption(quality['note'])
         st.markdown(f"<span class='ds-chip red'>오류 {summary['errors']}</span><span class='ds-chip yellow'>주의 {summary['warnings']}</span><span class='ds-chip blue'>확인 {summary['checks']}</span>", unsafe_allow_html=True)
         section("빠른 실행", "검토 결과 내보내기")
@@ -228,7 +228,7 @@ if page == 'dashboard':
 
 # --- Upload ------------------------------------------------------------------
 elif page == 'upload':
-    hero(texts.get("st_upload_kicker","02 / DATA INTAKE"), texts.get("st_upload_title","자료를 먼저 깨끗하게."), texts.get("upload_description","CSV/XLSX의 열을 자동 인식하고 사람이 확인합니다."))
+    hero(texts.get("st_upload_kicker","02 · 자료 등록"), texts.get("st_upload_title","회계자료 등록 및 항목 확인"), texts.get("upload_description","CSV/XLSX의 열을 자동 인식하고 사람이 확인합니다."))
     sample = create_sample_template()
     st.download_button("표준 업로드 양식 받기", sample.read_bytes(), sample.name)
     file = st.file_uploader("회계자료 파일", type=["csv","xlsx","xlsm"], help="첫 행에 열 제목이 있는 표 형식을 권장합니다.")
@@ -267,7 +267,7 @@ elif page == 'upload':
                                       VALUES(?,?,?,?,datetime('now','localtime'),datetime('now','localtime'))
                                       ON CONFLICT(header_signature) DO UPDATE SET mapping_json=excluded.mapping_json,last_used_at=excluded.last_used_at""",
                                      (f"자동 저장 · {Path(file.name).stem[:50]}", sig, json.dumps(headers,ensure_ascii=False), json.dumps(override,ensure_ascii=False)))
-                    st.success(f"{result['rows']:,}건을 저장하고 검토 Rule을 실행했습니다.")
+                    st.success(f"{result['rows']:,}건을 저장하고 검토 기준을 적용했습니다.")
                 except Exception as e:
                     st.error(str(e))
         except Exception as e:
@@ -275,7 +275,7 @@ elif page == 'upload':
 
 # --- Transactions ------------------------------------------------------------
 elif page == 'transactions':
-    hero(texts.get("st_transactions_kicker","03 / TRANSACTION REVIEW"), texts.get("st_transactions_title","원본 행까지 추적하는 검토."), texts.get("transactions_description","원본 파일과 행번호를 보존한 상태로 검토합니다."))
+    hero(texts.get("st_transactions_kicker","03 · 거래 검토"), texts.get("st_transactions_title","회계자료 검토"), texts.get("transactions_description","원본 파일과 행번호를 보존한 상태로 검토합니다."))
     f1,f2,f3 = st.columns([2,1,1])
     q = f1.text_input("검색", placeholder="거래처·사용목적·전표번호·사용자")
     status = f2.selectbox("상태", ["","검토필요","정상","미검토"])
@@ -289,7 +289,7 @@ elif page == 'transactions':
         tx_id = st.selectbox("상세 검토할 거래 ID", [t['id'] for t in txs], format_func=lambda x: next(f"#{t['id']} · {t.get('vendor') or '-'} · {won(t.get('amount'))}" for t in txs if t['id']==x))
         detail = get_transaction_detail(int(tx_id))
         if detail:
-            with st.expander("거래 상세 / 이슈 처리", expanded=True):
+            with st.expander("거래 상세 / 검토 항목 처리", expanded=True):
                 a,b,c,d = st.columns(4)
                 a.metric("일자", detail.get('expense_date') or '-')
                 b.metric("금액", won(detail.get('amount')))
@@ -308,7 +308,7 @@ elif page == 'transactions':
 
 # --- Issues ------------------------------------------------------------------
 elif page == 'issues':
-    hero(texts.get("st_issues_kicker","04 / ACTION QUEUE"), texts.get("st_issues_title","발견한 문제를 실제 업무로."), texts.get("issues_description","확인·보완 사항을 실제 처리업무로 관리합니다."))
+    hero(texts.get("st_issues_kicker","04 · 확인·보완"), texts.get("st_issues_title","확인·보완 업무 관리"), texts.get("issues_description","확인·보완 사항을 실제 처리업무로 관리합니다."))
     rows = issue_rows(True)
     a,b,c = st.columns(3)
     sev = a.selectbox("등급", ["전체","오류","주의","확인"])
@@ -317,7 +317,7 @@ elif page == 'issues':
     filt = [r for r in rows if (sev=='전체' or r['severity']==sev) and (not assignee_filter or assignee_filter in (r.get('assignee') or '')) and (state=='전체' or r['status']==state)]
     if filt:
         st.dataframe(pd.DataFrame(filt)[['id','severity','category','vendor','amount','message','assignee','due_date','status']], use_container_width=True, hide_index=True)
-        issue_id = st.selectbox("처리할 이슈", [r['id'] for r in filt], format_func=lambda x: next(f"#{r['id']} [{r['severity']}] {r.get('vendor') or '-'} · {r['message'][:42]}" for r in filt if r['id']==x))
+        issue_id = st.selectbox("처리할 검토 항목", [r['id'] for r in filt], format_func=lambda x: next(f"#{r['id']} [{r['severity']}] {r.get('vendor') or '-'} · {r['message'][:42]}" for r in filt if r['id']==x))
         current_issue = next(r for r in filt if r['id']==issue_id)
         with st.form("issue_form"):
             c1,c2 = st.columns(2)
@@ -338,14 +338,14 @@ elif page == 'issues':
                 st.rerun()
         tx = get_transaction_detail(current_issue['transaction_id'])
         if tx:
-            section("확인 요청 문구", "코드리스 문구 템플릿 기반")
+            section("확인 요청 문구", "관리자 설정 문구 적용")
             st.code(confirmation_message(tx, current_issue), language=None)
     else:
         st.markdown('<div class="ds-note ds-success">조건에 해당하는 미완료 업무가 없습니다.</div>', unsafe_allow_html=True)
 
 # --- Documents ---------------------------------------------------------------
 elif page == 'documents':
-    hero(texts.get("st_documents_kicker","05 / EVIDENCE"), texts.get("st_documents_title","증빙을 거래와 연결하기."), texts.get("documents_description","증빙번호를 부여해 거래와 연결합니다."))
+    hero(texts.get("st_documents_kicker","05 · 증빙 관리"), texts.get("st_documents_title","증빙자료 관리"), texts.get("documents_description","증빙번호를 부여해 거래와 연결합니다."))
     u = st.file_uploader("증빙·문서 업로드", type=['pdf','docx','txt','jpg','jpeg','png'])
     c1,c2 = st.columns(2)
     ref = c1.text_input("증빙번호", placeholder="예: AUG-RC-009")
@@ -353,7 +353,7 @@ elif page == 'documents':
     if u and st.button("문서 저장", type="primary"):
         try:
             save_document(u.name, u.getvalue(), ref, "" if cat=="자동" else cat)
-            st.success("문서를 저장하고 증빙 연결 Rule을 다시 실행했습니다.")
+            st.success("문서를 저장하고 증빙 검토 기준을 다시 적용했습니다.")
             st.rerun()
         except Exception as e:
             st.error(str(e))
@@ -364,11 +364,11 @@ elif page == 'documents':
 
 # --- Checklist ---------------------------------------------------------------
 elif page == 'checklist':
-    hero(texts.get("st_checklist_kicker","06 / PRE-SUBMISSION"), texts.get("st_checklist_title","제출 전 마지막 확인."), texts.get("checklist_description","제출 전에 사람이 최종 확인해야 할 항목을 관리합니다."))
+    hero(texts.get("st_checklist_kicker","06 · 제출 전 점검"), texts.get("st_checklist_title","제출 전 점검"), texts.get("checklist_description","제출 전에 사람이 최종 확인해야 할 항목을 관리합니다."))
     opts = ["전체"] + months_available()
     period = st.selectbox("검토 기간", opts)
     data = checklist_data("" if period=="전체" else period)
-    st.markdown(f"<div class='ds-note {'ds-success' if data['ready'] else 'ds-warning'}'><b>{'제출 준비 가능' if data['ready'] else '추가 검토 필요'}</b><br>미완료 이슈 {data['unresolved']:,}건 · 오류 {data['errors']:,}건 · 주의 {data['warnings']:,}건</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='ds-note {'ds-success' if data['ready'] else 'ds-warning'}'><b>{'제출 준비 가능' if data['ready'] else '추가 검토 필요'}</b><br>미처리 검토 항목 {data['unresolved']:,}건 · 오류 {data['errors']:,}건 · 주의 {data['warnings']:,}건</div>", unsafe_allow_html=True)
     for item in data['items']:
         with st.container(border=True):
             cols = st.columns([0.7,3.5,1.1])
@@ -385,7 +385,7 @@ elif page == 'checklist':
 
 # --- Reports -----------------------------------------------------------------
 elif page == 'reports':
-    hero(texts.get("st_reports_kicker","07 / MONTHLY REPORT"), texts.get("st_reports_title","무엇이 변했는지부터."), texts.get("reports_description","월별 회계자료를 수치 기반으로 요약합니다."))
+    hero(texts.get("st_reports_kicker","07 · 월별 보고"), texts.get("st_reports_title","월별 증감 현황 및 주요 변동"), texts.get("reports_description","월별 회계자료를 수치 기반으로 요약합니다."))
     months = months_available()
     month = st.selectbox("보고 월", months) if months else ""
     rpt = monthly_report(month)
@@ -393,7 +393,7 @@ elif page == 'reports':
         c1,c2,c3,c4 = st.columns(4)
         c1.metric("자료 건수", f"{rpt['count']:,}")
         c2.metric("합계금액", won(rpt['amount']), f"{rpt['amount_change_pct']:+.1f}%" if rpt['amount_change_pct'] is not None else None)
-        c3.metric("미확인 이슈", f"{rpt['issue_count']:,}")
+        c3.metric("미처리 검토 항목", f"{rpt['issue_count']:,}")
         c4.metric("오류 등급", f"{rpt['error_count']:,}")
         st.markdown(f"<div class='ds-note'>{rpt['draft']}</div>", unsafe_allow_html=True)
         t1,t2 = st.tabs(["계정과목", "거래처"])
@@ -414,7 +414,7 @@ elif page == 'reports':
 
 # --- AI ----------------------------------------------------------------------
 elif page == 'ai':
-    hero(texts.get("st_ai_kicker","08 / AI ASSIST"), texts.get("st_ai_title","AI는 계산기가 아니라 문장 보조자."), texts.get("ai_description","검증된 집계값만 사용해 AI 보고 보조 프롬프트를 만듭니다."))
+    hero(texts.get("st_ai_kicker","08 · 보고서 작성"), texts.get("st_ai_title","월별 보고서 작성 보조"), texts.get("ai_description","검증된 집계값만 사용해 AI 보고 보조 프롬프트를 만듭니다."))
     months = months_available(); month = st.selectbox("대상 월", months) if months else ""
     info = ai_assist_prompt(month)
     st.markdown('<div class="ds-note">프로그램이 외부 AI로 자료를 자동 전송하지 않습니다. 아래 프롬프트를 사람이 확인한 뒤 활용하는 구조입니다.</div>', unsafe_allow_html=True)
@@ -422,8 +422,8 @@ elif page == 'ai':
 
 # --- Settings ----------------------------------------------------------------
 elif page == 'settings':
-    hero(texts.get("st_settings_kicker","09 / NO-CODE ADMIN"), texts.get("st_settings_title","코드 없이 운영 기준을 바꾸기."), texts.get("settings_description","코드 수정 없이 화면 문구와 검토 기준을 변경합니다."))
-    tabs = st.tabs(["기본 설정","메뉴","화면 문구","검토 Rule","체크리스트"])
+    hero(texts.get("st_settings_kicker","09 · 관리자 설정"), texts.get("st_settings_title","관리자 설정"), texts.get("settings_description","코드 수정 없이 화면 문구와 검토 기준을 변경합니다."))
+    tabs = st.tabs(["기본 설정","메뉴","화면 문구","검토 기준","체크리스트"])
     with tabs[0]:
         with st.form("basic_settings"):
             program_name = st.text_input("프로그램명", value=settings.get('program_name',''))
@@ -453,21 +453,21 @@ elif page == 'settings':
             set_ui_text(row['key'], val); st.success("저장했습니다."); st.rerun()
     with tabs[3]:
         rules = get_rules(True)
-        rule_pick = st.selectbox("Rule", range(len(rules)), format_func=lambda i: f"{rules[i]['code']} · {rules[i]['name']}")
+        rule_pick = st.selectbox("검토 기준", range(len(rules)), format_func=lambda i: f"{rules[i]['code']} · {rules[i]['name']}")
         r = rules[rule_pick]
         c1,c2,c3 = st.columns(3)
         enabled = c1.checkbox("사용", value=bool(r['enabled']))
         severity = c2.selectbox("등급", ["오류","주의","확인"], index=["오류","주의","확인"].index(r['severity']))
         compare = c3.text_input("기준값", value=r.get('compare_value') or '')
-        name = st.text_input("Rule 이름", value=r['name'])
+        name = st.text_input("검토 기준명", value=r['name'])
         message = st.text_area("표시 문구", value=r['message'])
-        if st.button("Rule 저장", type="primary"):
+        if st.button("검토 기준 저장", type="primary"):
             if r['rule_type']=='VAT_MISMATCH' or (r['rule_type']=='FIELD' and r.get('operator') in {'gt','gte','lt','lte'} and r.get('field_name') in {'amount','supply_amount','tax_amount'}):
                 try: float(compare)
-                except ValueError: st.error("이 Rule의 기준값은 숫자여야 합니다."); st.stop()
+                except ValueError: st.error("이 검토 기준의 기준값은 숫자여야 합니다."); st.stop()
             with db() as conn:
                 conn.execute("UPDATE review_rules SET name=?,enabled=?,severity=?,compare_value=?,message=? WHERE code=?", (name,1 if enabled else 0,severity,compare,message,r['code']))
-            validate_all(); st.success("Rule을 저장하고 전체 자료를 재검토했습니다."); st.rerun()
+            validate_all(); st.success("검토 기준을 저장하고 전체 자료를 다시 점검했습니다."); st.rerun()
     with tabs[4]:
         with db() as conn:
             items = [dict(x) for x in conn.execute("SELECT * FROM checklist_items ORDER BY sort_order,id")]
@@ -476,17 +476,17 @@ elif page == 'settings':
 
 # --- Help --------------------------------------------------------------------
 else:
-    hero(texts.get("st_help_kicker","HOW TO USE"), texts.get("st_help_title","5분이면 흐름을 볼 수 있습니다."), "샘플자료를 넣고 자동검토 → 증빙 연결 → 이슈 처리 → 월별 보고 → 감사대응 자료까지 순서대로 체험해 보세요.")
+    hero(texts.get("st_help_kicker","사용 안내"), texts.get("st_help_title","처음 사용하는 방법"), "샘플자료를 넣고 자동 검토 → 증빙 연결 → 확인·보완 처리 → 월별 보고 → 감사대응 자료까지 순서대로 체험해 보세요.")
     st.markdown("""
 ### 추천 체험 순서
 1. **자료 업로드** → `sample_data/02_오류포함_검토연습_2026-08.xlsx` 업로드
-2. **회계자료 검토** → 누락·중복·금액·증빙 이슈 확인
+2. **회계자료 검토** → 누락·중복·금액·증빙 검토 항목 확인
 3. **확인·보완 업무** → 담당자와 처리기한 지정
-4. **증빙·문서 관리** → `AUG-RC-009` 영수증을 연결해 증빙 누락 Rule 변화 확인
-5. **제출 전 체크리스트** → 자동 Rule + 수동 확인
+4. **증빙·문서 관리** → `AUG-RC-009` 영수증을 연결해 증빙 누락 검토 결과 변화 확인
+5. **제출 전 체크리스트** → 자동 검토 기준 + 수동 확인
 6. **월별 보고** → 계정과목/거래처 증감 기여 확인
 7. **AI 보고 보조** → 검증된 숫자만 포함된 보고 프롬프트 확인
-8. **관리자 설정** → 프로그램명·메뉴·문구·Rule 기준을 코드 없이 변경
+8. **관리자 설정** → 프로그램명·메뉴·문구·검토 기준을 화면에서 변경
 
 ### 중요한 한계
 - 이 앱은 회계·세무·감사인의 전문적 판단을 대체하지 않습니다.

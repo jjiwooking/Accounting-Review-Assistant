@@ -7,7 +7,7 @@
   <a class="card-link" href="/issues?rule=DUPLICATE_"><div class="card metric"><div class="label">{{ texts.metric_duplicate }}</div><div class="value">{{ '{:,}'.format(summary.duplicates) }}건</div><div class="sub">{{ texts.metric_duplicate_sub }}</div></div></a>
 </div>
 <div class="grid grid-2" style="margin-top:14px">
-  <a class="card-link" href="/issues?assignee=__UNASSIGNED__"><div class="card metric"><div class="label">{{ texts.metric_unassigned }}</div><div class="value">{{ summary.unassigned }}건</div><div class="sub">미완료 이슈 중 담당자 없음</div></div></a>
+  <a class="card-link" href="/issues?assignee=__UNASSIGNED__"><div class="card metric"><div class="label">{{ texts.metric_unassigned }}</div><div class="value">{{ summary.unassigned }}건</div><div class="sub">미처리 검토 항목 중 담당자 없음</div></div></a>
   <a class="card-link" href="/issues?due=overdue"><div class="card metric"><div class="label">{{ texts.metric_overdue }}</div><div class="value">{{ summary.overdue }}건</div><div class="sub">설정한 처리기한 기준</div></div></a>
 </div>
 <div class="grid grid-2" style="margin-top:14px">
