@@ -8,7 +8,7 @@
 
 ## 🚀 바로 보기
 
-- **GitHub 저장소:** 배포 후 링크 입력
+- **GitHub 저장소:** (https://github.com/jjiwooking/Accounting-Review-Assistant)
 - **Streamlit Demo:** (https://accounting-review-assistant-fltw95zxivhdezd5n3arjt.streamlit.app/#48f9391e)
 > 포트폴리오용 공개 버전에서는 가상 샘플 데이터를 사용합니다.  
 > 실제 회사 회계자료나 개인정보는 GitHub에 업로드하지 않는 것을 권장합니다.
