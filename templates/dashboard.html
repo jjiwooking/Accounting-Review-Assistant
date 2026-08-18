@@ -1,0 +1,21 @@
+{% extends 'base.html' %}{% block content %}
+<div class="page-head"><div><h1>{{ menu_map.dashboard.label }}</h1><p>{{ texts.dashboard_description }}</p></div><div class="actions"><a class="btn" href="/upload">{{ texts.dashboard_upload_button }}</a><a class="btn secondary" href="/export/review">{{ texts.dashboard_excel_button }}</a></div></div>
+<div class="grid grid-4">
+  <a class="card-link" href="/transactions"><div class="card metric"><div class="label">{{ texts.metric_total }}</div><div class="value">{{ '{:,}'.format(summary.total) }}건</div><div class="sub">{{ texts.metric_total_sub.replace('{count}', summary.imports|string) }}</div></div></a>
+  <a class="card-link" href="/transactions?status=검토필요"><div class="card metric"><div class="label">{{ texts.metric_review }}</div><div class="value">{{ '{:,}'.format(summary.review_required) }}건</div><div class="sub">{{ texts.metric_review_sub.replace('{count}', summary.normal_count|string) }}</div></div></a>
+  <a class="card-link" href="/issues?rule=EVIDENCE_MISSING"><div class="card metric"><div class="label">{{ texts.metric_evidence }}</div><div class="value">{{ '{:,}'.format(summary.missing_evidence) }}건</div><div class="sub">{{ texts.metric_evidence_sub }}</div></div></a>
+  <a class="card-link" href="/issues?rule=DUPLICATE_"><div class="card metric"><div class="label">{{ texts.metric_duplicate }}</div><div class="value">{{ '{:,}'.format(summary.duplicates) }}건</div><div class="sub">{{ texts.metric_duplicate_sub }}</div></div></a>
+</div>
+<div class="grid grid-2" style="margin-top:14px">
+  <a class="card-link" href="/issues?assignee=__UNASSIGNED__"><div class="card metric"><div class="label">{{ texts.metric_unassigned }}</div><div class="value">{{ summary.unassigned }}건</div><div class="sub">미완료 이슈 중 담당자 없음</div></div></a>
+  <a class="card-link" href="/issues?due=overdue"><div class="card metric"><div class="label">{{ texts.metric_overdue }}</div><div class="value">{{ summary.overdue }}건</div><div class="sub">설정한 처리기한 기준</div></div></a>
+</div>
+<div class="grid grid-2" style="margin-top:14px">
+  <div class="card"><h2 class="section-title">{{ texts.dashboard_quality_title }}</h2><div class="quality"><div class="quality-score" style="--score:{{ quality.score }}"><strong>{{ quality.score }}</strong></div><div><div style="font-size:18px;font-weight:800">{{ quality.label }}</div><p class="muted">{{ quality.note }}</p><div><span class="badge bad">오류 {{ summary.errors }}</span> <span class="badge warn">주의 {{ summary.warnings }}</span> <span class="badge info">확인 {{ summary.checks }}</span></div></div></div></div>
+  <div class="card"><h2 class="section-title">{{ texts.dashboard_issue_title }}</h2>{% if issue_summary %}{% set maxv = issue_summary[0].count %}{% for i in issue_summary %}<div class="bar-row"><span>{{ i.category }}</span><div class="bar"><span style="width:{{ (i.count/maxv*100)|round }}%"></span></div><strong class="number">{{ i.count }}건</strong></div>{% endfor %}{% else %}<p class="muted">{{ texts.dashboard_empty_issues }}</p>{% endif %}</div>
+</div>
+<div class="grid grid-2" style="margin-top:14px">
+  <div class="card"><h2 class="section-title">{{ texts.dashboard_recent_tx_title }}</h2><div class="table-wrap"><table class="table"><thead><tr><th>일자</th><th>거래처</th><th>사용목적</th><th>금액</th><th>상태</th></tr></thead><tbody>{% for r in recent %}<tr><td>{{ r.expense_date or '-' }}</td><td>{{ r.vendor or '-' }}</td><td><a href="/transactions/{{ r.id }}">{{ r.purpose or '-' }}</a></td><td class="number">{{ '{:,.0f}'.format(r.amount or 0) }}</td><td>{% if r.review_status=='정상' %}<span class="badge good">정상</span>{% else %}<span class="badge bad">검토필요 {{ r.issue_count }}</span>{% endif %}</td></tr>{% else %}<tr><td colspan="5" class="muted">{{ texts.dashboard_empty_tx }}</td></tr>{% endfor %}</tbody></table></div></div>
+  <div class="card"><h2 class="section-title">{{ texts.dashboard_recent_import_title }}</h2><div class="table-wrap"><table class="table"><thead><tr><th>파일</th><th>건수</th><th>업로드</th></tr></thead><tbody>{% for i in imports %}<tr><td>{{ i.filename }}</td><td>{{ i.row_count }}건</td><td>{{ i.imported_at }}</td></tr>{% else %}<tr><td colspan="3" class="muted">{{ texts.dashboard_empty_import }}</td></tr>{% endfor %}</tbody></table></div><div class="footer-note">{{ texts.dashboard_footer }}</div></div>
+</div>
+{% endblock %}

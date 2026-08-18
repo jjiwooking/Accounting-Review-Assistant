@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block content %}
+<div class="page-head"><div><h1>{{ menu_map.issues.label }}</h1><p>{{ texts.issues_description }}</p></div></div>
+<form class="filterbar"><select name="status"><option value="open" {% if status=='open' %}selected{% endif %}>미완료 전체</option>{% for st in ['미확인','담당자지정','보완요청','재검토','확인완료','예외인정'] %}<option value="{{ st }}" {% if status==st %}selected{% endif %}>{{ st }}</option>{% endfor %}</select><select name="severity"><option value="">전체 등급</option>{% for s in ['오류','주의','확인'] %}<option value="{{ s }}" {% if severity==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select><select name="assignee"><option value="">전체 담당자</option><option value="__UNASSIGNED__" {% if assignee=='__UNASSIGNED__' %}selected{% endif %}>담당자 미지정</option>{% for a in assignees %}<option value="{{ a }}" {% if assignee==a %}selected{% endif %}>{{ a }}</option>{% endfor %}</select><select name="due"><option value="">전체 기한</option><option value="overdue" {% if due=='overdue' %}selected{% endif %}>기한 경과</option></select><select name="rule"><option value="">전체 Rule</option>{% for rc in rule_codes %}<option value="{{ rc }}" {% if rule==rc %}selected{% endif %}>{{ rc }}</option>{% endfor %}</select><button class="btn secondary">{{ texts.issues_filter_button }}</button></form>
+<div class="admin-list">
+{% for i in rows %}
+<form class="admin-item" method="post" action="/issues/{{ i.id }}/update">
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+    <div><span class="badge {% if i.severity=='오류' %}bad{% elif i.severity=='주의' %}warn{% else %}info{% endif %}">{{ i.severity }}</span> <strong>{{ i.category }}</strong> <span class="mono muted">{{ i.rule_code }}</span><div style="margin-top:6px">{{ i.message }}</div><small class="muted"><a href="/transactions/{{ i.transaction_id }}">{{ i.source_file }}:{{ i.source_row }}</a> · {{ i.expense_date or '-' }} · {{ i.vendor or '-' }} · {{ '{:,.0f}'.format(i.amount or 0) }}원</small></div>
+    <span class="badge {% if i.status in ['확인완료','예외인정'] %}good{% elif i.status=='미확인' %}bad{% else %}warn{% endif %}">{{ i.status }}</span>
+  </div>
+  <div class="form-grid" style="margin-top:12px"><div class="field"><label>담당자</label><input name="assignee" value="{{ i.assignee or '' }}" placeholder="담당자 또는 담당부서"></div><div class="field"><label>처리기한</label><input type="date" name="due_date" value="{{ i.due_date or '' }}"></div><div class="field"><label>처리상태</label><select name="status">{% for st in ['미확인','담당자지정','보완요청','재검토','확인완료','예외인정'] %}<option value="{{ st }}" {% if i.status==st %}selected{% endif %}>{{ st }}</option>{% endfor %}</select></div><div class="field"><label>처리 근거/메모</label><input name="note" value="{{ i.resolution_note or '' }}" placeholder="원증빙 확인 결과, 보완 요청 내용 등"></div></div>
+  <div style="margin-top:9px"><button class="btn small secondary">저장</button></div>
+</form>
+{% else %}<div class="card"><p class="muted">{{ texts.issues_empty }}</p></div>{% endfor %}
+</div>
+<div class="footer-note">최대 500건까지 표시합니다. 확인완료·예외인정 외 상태는 미완료 업무로 집계됩니다.</div>
+{% endblock %}

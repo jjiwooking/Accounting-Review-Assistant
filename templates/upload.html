@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% block content %}
+<div class="page-head"><div><h1>{{ texts.upload_title }}</h1><p>{{ texts.upload_description }}</p></div><div class="actions"><a class="btn secondary" href="/export/sample">{{ texts.upload_sample_button }}</a><a class="btn secondary" href="/export/demo-data">{{ texts.upload_demo_button }}</a></div></div>
+{% if error %}<div class="notice bad">{{ error }}</div>{% endif %}
+<div class="card" style="max-width:760px"><form method="post" action="/upload/preview" enctype="multipart/form-data"><div class="field"><label>{{ texts.upload_file_label }}</label><input type="file" name="file" accept=".csv,.xlsx,.xlsm" required><small>{{ texts.upload_file_help }}</small></div><div style="margin-top:16px"><button class="btn" type="submit">{{ texts.upload_preview_button }}</button></div></form></div>
+<div class="card" style="max-width:760px;margin-top:14px"><h2 class="section-title">{{ texts.upload_process_title }}</h2><ol class="muted" style="line-height:1.8"><li>{{ texts.upload_process_1 }}</li><li>{{ texts.upload_process_2 }}</li><li>{{ texts.upload_process_3 }}</li></ol></div>
+{% endblock %}

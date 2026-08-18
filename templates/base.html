@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ program_name }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">AR</div>
+      <div><strong>{{ program_name }}</strong><small>{{ texts.brand_subtitle }}</small></div>
+    </div>
+    <nav>
+      {% for m in menus %}
+      <a href="{{ m.path }}" class="{% if (m.path=='/' and request.url.path=='/') or (m.path!='/' and request.url.path.startswith(m.path)) %}active{% endif %}">{{ m.label }}</a>
+      {% endfor %}
+    </nav>
+    <div class="sidebar-note">
+      <strong>{{ texts.sidebar_mode_title }}</strong>
+      <span>{{ texts.sidebar_mode_desc }}</span>
+    </div>
+  </aside>
+  <main class="main">{% block content %}{% endblock %}</main>
+</div>
+</body>
+</html>

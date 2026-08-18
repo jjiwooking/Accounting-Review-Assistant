@@ -1,0 +1,7 @@
+{% extends 'base.html' %}{% block content %}
+<div class="page-head"><div><h1>{{ texts.mapping_title }}</h1><p><strong>{{ filename }}</strong> — {{ texts.mapping_description }}</p></div></div>
+{% if profile_name %}<div class="notice good"><strong>저장된 매핑 프로필 적용:</strong> {{ profile_name }} · 이전에 사람이 확정한 동일 열 구조의 매핑을 불러왔습니다. 이번 파일에서도 실제 열 의미를 다시 확인하세요.</div>{% endif %}
+<div class="notice info">{{ texts.mapping_warning }}</div>
+<form method="post" action="/upload/confirm"><input type="hidden" name="token" value="{{ token }}"><div class="card"><div class="form-grid">{% for f in fields %}<div class="field"><label>{{ display_names[f] }}{% if f in ['expense_date','amount','purpose'] %} *{% endif %}</label><select name="{{ f }}"><option value="">연결 안 함</option>{% for h in headers %}<option value="{{ h }}" {% if mapping.get(f)==h %}selected{% endif %}>{{ h }}</option>{% endfor %}</select></div>{% endfor %}</div><div style="margin-top:16px"><button class="btn" type="submit">{{ texts.mapping_confirm_button }}</button></div></div></form>
+<div class="card" style="margin-top:14px"><h2 class="section-title">{{ texts.mapping_preview_title }}</h2><div class="table-wrap"><table class="table"><thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead><tbody>{% for row in preview %}<tr>{% for h in headers %}<td>{{ row.get(h,'') }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}
